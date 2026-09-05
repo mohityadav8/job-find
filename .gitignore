@@ -1,0 +1,67 @@
+### ---------- Secrets & environment (NEVER commit these) ----------
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env.local
+*.pem
+*.key
+
+### ---------- Go (backend) ----------
+# Compiled binaries
+backend/bin/
+backend/cmd/api/api
+backend/cmd/ingest/ingest
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test / coverage
+*.test
+*.out
+coverage.txt
+
+# Go build cache (if ever generated locally)
+backend/vendor/
+
+### ---------- Next.js / Node (frontend) ----------
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript build info
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+### ---------- Docker ----------
+# (Dockerfiles are tracked; local overrides are not)
+docker-compose.override.yml
+
+### ---------- Database ----------
+*.sql.bak
+/pgdata/
+*.db
+
+### ---------- OS junk ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### ---------- Editor / IDE ----------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+### ---------- Logs ----------
+*.log
+logs/

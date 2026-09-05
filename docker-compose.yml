@@ -1,0 +1,97 @@
+# Full local stack for job-find. `docker compose up` builds and runs everything:
+# Postgres+PostGIS, Redis, the API, the ingestion worker, and the frontend.
+#
+# For a quick "just the databases" dev loop (running Go/Next locally against
+# them), use:  docker compose up postgres redis
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: job-find-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jobfind
+      POSTGRES_PASSWORD: localdevpassword
+      POSTGRES_DB: jobfind
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobfind"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: job-find-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: job-find-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://jobfind:localdevpassword@postgres:5432/jobfind?sslmode=disable
+      REDIS_ADDR: redis:6379
+      PORT: "8080"
+      JWT_SECRET: ${JWT_SECRET:-dev-insecure-change-me}
+      ALLOW_ORIGINS: ${ALLOW_ORIGINS:-http://localhost:3000}
+      ADZUNA_APP_ID: ${ADZUNA_APP_ID:-}
+      ADZUNA_APP_KEY: ${ADZUNA_APP_KEY:-}
+      JOOBLE_API_KEY: ${JOOBLE_API_KEY:-}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+    ports:
+      - "8080:8080"
+
+  ingest:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.ingest
+    container_name: job-find-ingest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://jobfind:localdevpassword@postgres:5432/jobfind?sslmode=disable
+      REDIS_ADDR: redis:6379
+      INGEST_CRON: ${INGEST_CRON:-0 */6 * * *}
+      ADZUNA_APP_ID: ${ADZUNA_APP_ID:-}
+      ADZUNA_APP_KEY: ${ADZUNA_APP_KEY:-}
+      JOOBLE_API_KEY: ${JOOBLE_API_KEY:-}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+    command: ["worker"]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.frontend
+    container_name: job-find-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      BACKEND_URL: http://api:8080
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
