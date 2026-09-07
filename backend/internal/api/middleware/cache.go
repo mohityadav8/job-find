@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
+	"math"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -53,8 +57,8 @@ func (c *Cache) sweep() {
 	}
 }
 
-// Handler caches GET responses keyed on method+path+query. Non-GET requests and
-// non-2xx responses bypass the cache entirely.
+// Handler caches GET responses keyed on method+path+normalised-query.
+// Non-GET requests and non-2xx responses bypass the cache entirely.
 func (c *Cache) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -105,14 +109,56 @@ func (c *Cache) Handler(next http.Handler) http.Handler {
 	})
 }
 
+// cacheKey hashes method + path + normalised query. The query is normalised
+// so that bbox coordinates are rounded to 1 decimal place (~11 km grid) and
+// keys are sorted — this prevents trivial map pans from always missing the
+// cache.
 func cacheKey(r *http.Request) string {
 	h := sha1.New()
 	h.Write([]byte(r.Method))
 	h.Write([]byte{0})
 	h.Write([]byte(r.URL.Path))
 	h.Write([]byte{0})
-	h.Write([]byte(r.URL.RawQuery))
+	h.Write([]byte(normalisedQuery(r.URL.Query())))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+// normalisedQuery rebuilds the query string with bbox coordinates rounded to
+// 1 decimal place so nearby map viewports share the same cache entry instead
+// of always missing. All other params are passed through unchanged. Keys are
+// sorted via url.Values.Encode() so param order never affects the cache key.
+func normalisedQuery(q url.Values) string {
+	if bbox := q.Get("bbox"); bbox != "" {
+		parts := strings.Split(bbox, ",")
+		if len(parts) == 4 {
+			rounded := make([]string, 4)
+			ok := true
+			for i, p := range parts {
+				f, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
+				if err != nil {
+					ok = false
+					break
+				}
+				// Round to 1 decimal place: 0.1 degree ≈ 11 km.
+				rounded[i] = strconv.FormatFloat(math.Round(f*10)/10, 'f', 1, 64)
+			}
+			if ok {
+				q = cloneValues(q)
+				q.Set("bbox", strings.Join(rounded, ","))
+			}
+		}
+	}
+	return q.Encode() // Encode sorts keys alphabetically.
+}
+
+// cloneValues shallow-copies a url.Values so we can mutate bbox without
+// touching the original request.
+func cloneValues(q url.Values) url.Values {
+	out := make(url.Values, len(q))
+	for k, v := range q {
+		out[k] = append([]string(nil), v...)
+	}
+	return out
 }
 
 // responseRecorder tees the handler's output into a buffer while still writing
