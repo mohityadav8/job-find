@@ -73,7 +73,7 @@ export default function MapView({ pins, onOfficeSelect, onViewportChange }: MapV
     // bug. Send a safe world bbox in that case so the backend still runs but
     // doesn't filter anything out.
     const lngSpan = east - west;
-    const spansWorld = lngSpan >= 340 || west < -180 || east > 180;
+    const spansWorld = lngSpan >= 270 || west < -180 || east > 180;
 
     onViewportRef.current(
       spansWorld
