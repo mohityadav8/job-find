@@ -22,12 +22,12 @@ interface MapViewProps {
   onViewportChange?: (v: Viewport) => void;
 }
 
-// A dark, low-chroma basemap so the amber pins are unmistakably the focus.
+// A dark, low-chroma basemap so the orange pins are unmistakably the focus.
 // Uses the free CARTO dark vector style (no key required).
 const DARK_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
-const SIGNAL = '#f5a524';
-const SIGNAL_DARK = '#c77f14';
+const SIGNAL = '#ff6b1a';       // literally orange, matches the job-find logo
+const SIGNAL_DARK = '#c94e10';
 
 export default function MapView({ pins, onOfficeSelect, onViewportChange }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,12 +60,31 @@ export default function MapView({ pins, onOfficeSelect, onViewportChange }: MapV
     const map = mapRef.current;
     if (!map || !onViewportRef.current) return;
     const b = map.getBounds();
-    onViewportRef.current({
-      minLng: b.getWest(),
-      minLat: b.getSouth(),
-      maxLng: b.getEast(),
-      maxLat: b.getNorth(),
-    });
+
+    const west = b.getWest();
+    const east = b.getEast();
+    const south = b.getSouth();
+    const north = b.getNorth();
+
+    // At low zoom (fullscreen / wide monitor) MapLibre can return bounds that
+    // span >360° of longitude, cross the antimeridian, or exceed the ±85
+    // Mercator lat range. PostGIS's ST_MakeEnvelope treats those as nonsense
+    // and returns 0 rows — that's the "0 offices fullscreen, 361 half-screen"
+    // bug. Send a safe world bbox in that case so the backend still runs but
+    // doesn't filter anything out.
+    const lngSpan = east - west;
+    const spansWorld = lngSpan >= 340 || west < -180 || east > 180;
+
+    onViewportRef.current(
+      spansWorld
+        ? { minLng: -180, minLat: -85, maxLng: 180, maxLat: 85 }
+        : {
+          minLng: Math.max(west, -180),
+          minLat: Math.max(south, -85),
+          maxLng: Math.min(east, 180),
+          maxLat: Math.min(north, 85),
+        },
+    );
   }, []);
 
   // Init map once.
@@ -108,7 +127,7 @@ export default function MapView({ pins, onOfficeSelect, onViewportChange }: MapV
           'circle-color': [
             'step',
             ['get', 'point_count'],
-            SIGNAL_DARK, 25, SIGNAL, 100, '#ffcf6b',
+            SIGNAL_DARK, 25, SIGNAL, 100, '#ffb37a',
           ],
           'circle-opacity': 0.9,
           'circle-radius': ['step', ['get', 'point_count'], 16, 25, 22, 100, 30],
@@ -126,7 +145,7 @@ export default function MapView({ pins, onOfficeSelect, onViewportChange }: MapV
           'text-size': 13,
           'text-font': ['Metropolis Bold', 'Noto Sans Bold'],
         },
-        paint: { 'text-color': '#1a1204' },
+        paint: { 'text-color': '#1a0f04' },
       });
 
       // Individual office pins.
@@ -154,7 +173,7 @@ export default function MapView({ pins, onOfficeSelect, onViewportChange }: MapV
           'text-font': ['Metropolis Bold', 'Noto Sans Bold'],
           'text-offset': [0, 0.05],
         },
-        paint: { 'text-color': '#1a1204' },
+        paint: { 'text-color': '#1a0f04' },
       });
 
       loadedRef.current = true;

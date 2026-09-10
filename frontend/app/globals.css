@@ -10,8 +10,8 @@
      --ink-600  #24324c  hairlines, inactive
      --mist-300 #9fb0cc  secondary text
      --mist-100 #e8eefb  primary text
-     --signal   #f5a524  amber — pins, active state, the one bold color
-     --signal-d #c77f14  amber pressed
+     --signal   #ff6b1a  orange — pins, active state, the one bold color
+     --signal-d #c94e10  orange pressed
      --ok       #4ec9a5  remote/positive
    Type: "Space Grotesk" for display/UI (geometric, a little characterful),
          system stack fallback. One family, varied weight — no second face.
@@ -24,8 +24,9 @@
   --ink-600: #24324c;
   --mist-300: #9fb0cc;
   --mist-100: #e8eefb;
-  --signal: #f5a524;
-  --signal-d: #c77f14;
+  --signal: #ff6b1a;
+  --signal-d: #c94e10;
+  --signal-lo: rgba(255, 107, 26, 0.14);
   --ok: #4ec9a5;
 
   --radius: 10px;
@@ -54,7 +55,8 @@ body {
 }
 
 body {
-  overflow: hidden; /* the map owns the viewport */
+  overflow: hidden;
+  /* the map owns the viewport */
 }
 
 a {
@@ -103,10 +105,12 @@ button {
   font-size: 14px;
   transition: border-color 0.15s ease;
 }
+
 .input::placeholder {
   color: var(--mist-300);
   opacity: 0.7;
 }
+
 .input:focus {
   border-color: var(--signal);
   outline: none;
@@ -122,24 +126,29 @@ button {
   font-weight: 500;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
+
 .btn:hover {
   border-color: var(--mist-300);
 }
+
 .btn-primary {
   background: var(--signal);
   border-color: var(--signal);
-  color: #1a1204;
+  color: #1a0f04;
   font-weight: 600;
 }
+
 .btn-primary:hover {
   background: var(--signal-d);
   border-color: var(--signal-d);
 }
+
 .btn-ghost {
   background: transparent;
   border-color: transparent;
   color: var(--mist-300);
 }
+
 .btn-ghost:hover {
   color: var(--mist-100);
   background: var(--ink-700);
@@ -159,10 +168,12 @@ button {
   transition: all 0.15s ease;
   user-select: none;
 }
+
 .chip:hover {
   border-color: var(--mist-300);
   color: var(--mist-100);
 }
+
 .chip[data-active='true'] {
   background: color-mix(in srgb, var(--signal) 18%, transparent);
   border-color: var(--signal);
@@ -174,9 +185,11 @@ button {
   scrollbar-width: thin;
   scrollbar-color: var(--ink-600) transparent;
 }
+
 .scroll-thin::-webkit-scrollbar {
   width: 8px;
 }
+
 .scroll-thin::-webkit-scrollbar-thumb {
   background: var(--ink-600);
   border-radius: 8px;
@@ -193,4 +206,67 @@ button {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ---- sponsor / support / made-by row ------------------------------------- */
+.btn-sponsor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--signal);
+  background: var(--signal-lo);
+  color: var(--signal);
+  transition: background 0.15s ease, color 0.15s ease;
+  text-decoration: none;
+}
+
+.btn-sponsor:hover {
+  background: var(--signal);
+  color: #1a0f04;
+}
+
+.btn-support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--ink-600);
+  background: transparent;
+  color: var(--mist-100);
+  transition: border-color 0.15s ease, color 0.15s ease;
+  text-decoration: none;
+}
+
+.btn-support:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.credit-line {
+  padding: 10px 18px 12px;
+  border-top: 1px solid var(--ink-700);
+  font-size: 11.5px;
+  color: var(--mist-300);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.credit-line a {
+  color: var(--signal);
+  font-weight: 600;
+}
+
+.credit-line a:hover {
+  text-decoration: underline;
 }

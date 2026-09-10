@@ -55,7 +55,7 @@ export default function FilterSidebar({ filters, onChange, resultCount, loading 
         top: 16,
         left: 16,
         bottom: 16,
-        width: 320,
+        width: 340,
         maxWidth: 'calc(100vw - 32px)',
         zIndex: 20,
         display: 'flex',
@@ -178,6 +178,43 @@ export default function FilterSidebar({ filters, onChange, resultCount, loading 
           Post a job
         </a>
       </footer>
+
+      {/* Sponsor + support row */}
+      <div style={{ padding: '10px 14px', borderTop: '1px solid var(--ink-700)', display: 'flex', gap: 8 }}>
+        <a
+          className="btn-sponsor"
+          href="https://github.com/sponsors/mohityadav8"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ flex: 1 }}
+          aria-label="Sponsor job-find on GitHub"
+        >
+          ♥ Sponsor
+        </a>
+        <a
+          className="btn-support"
+          href="https://github.com/mohityadav8/job-find/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ flex: 1 }}
+          aria-label="Get support on GitHub Issues"
+        >
+          ? Support
+        </a>
+      </div>
+
+      {/* Made-by credit */}
+      <div className="credit-line">
+        <span>
+          Made by{' '}
+          <a href="https://github.com/mohityadav8" target="_blank" rel="noopener noreferrer">
+            @mohityadav8
+          </a>
+        </span>
+        <a href="https://github.com/mohityadav8/job-find" target="_blank" rel="noopener noreferrer">
+          GitHub ↗
+        </a>
+      </div>
     </aside>
   );
 }
